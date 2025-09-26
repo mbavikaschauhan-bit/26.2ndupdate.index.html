@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stoclix - Trading Journal</title>
+    <title>Tradlyst - Trading Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -999,7 +999,7 @@
             <form id="auth-form">
                 <div class="text-center mb-6">
                     <h1 class="text-3xl font-bold">
-                        <span style="color: #22c55e;">Stoc</span><span style="color: #ef4444;">lix</span>
+                        <span style="color: #22c55e;">Tradlyst</span>
                     </h1>
                     <h2 id="auth-title" class="text-2xl font-semibold mt-4" style="color: var(--text-primary);">Sign In</h2>
                     <p class="text-sm" style="color: var(--text-secondary);">Welcome back to your trading journal</p>
@@ -1034,7 +1034,7 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="w-64 flex-shrink-0 flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex" style="background-color: var(--bg-primary); border-right: 1px solid var(--border-color);">
             <div class="h-16 flex items-center justify-center px-4" style="border-bottom: 1px solid var(--border-color);">
-                <img src="logo.png" alt="Stoclix Trading Journal" class="h-10 w-auto object-contain" />
+                <img src="logo.png" alt="Tradlyst Trading Journal" class="h-10 w-auto object-contain" />
             </div>
             <nav class="flex-1 px-4 py-4 space-y-2">
                 <a href="#" data-page="dashboard" class="nav-item flex items-center px-4 py-2 rounded-md active" style="color: var(--text-secondary);">
@@ -1369,7 +1369,10 @@
                                 <!-- Most Common Mistakes Chart -->
                                 <div class="p-6 rounded-lg shadow-sm" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
                                     <div class="flex justify-between items-center mb-4">
-                                        <h3 class="font-semibold" style="color: var(--text-primary);">Most Common Mistakes</h3>
+                                        <div>
+                                            <h3 class="font-semibold" style="color: var(--text-primary);">Most Common Mistakes</h3>
+                                            <p class="text-sm mt-1" style="color: var(--text-muted);">Identify patterns in trading errors and behavioral issues</p>
+                                        </div>
                                     </div>
                                     <div class="relative h-64">
                                         <canvas id="mostCommonMistakesChart"></canvas>
