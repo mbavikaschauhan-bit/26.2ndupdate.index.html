@@ -1734,9 +1734,6 @@
                                 <div id="reports-metrics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                                     <!-- Dynamic content here -->
                                 </div>
-                                <div class="mt-4 flex justify-end">
-                                    <button id="export-statement-csv" class="text-sm underline">Export Statement CSV</button>
-                                </div>
                             </div>
 
                             <!-- Advanced Trading Metrics -->
@@ -4262,21 +4259,7 @@
         };
 
         const wireCsvButtons = () => {
-            const statementBtn = document.getElementById('export-statement-csv');
-            statementBtn?.addEventListener('click', () => {
-                const trades = JSON.parse(localStorage.getItem('trades') || '[]') || [];
-                const ledger = JSON.parse(localStorage.getItem('ledger') || '[]') || [];
-                const tradeRows = trades.map(t => {
-                    const gross = (t.exit_price && t.exit_date) ? ((t.exit_price - t.entry_price) * (t.quantity||0)) : 0;
-                    const charges = (t.brokerage||0)+(t.other_fees||0);
-                    const net = gross - charges;
-                    const netProfitPercentage = (t.exit_price && t.exit_date && t.entry_price) ? ((net / (t.entry_price * (t.quantity||0))) * 100) : 0;
-                    return [formatDateForDisplay(t.exit_date||t.entry_date)||'', 'Trade', t.asset||'', t.strategy||'', t.direction||'', gross, charges, net, netProfitPercentage, '', t.outcomeSummary||'', t.emotionalState||'', t.reasons||''];
-                });
-                const ledgerRows = ledger.map(l => [formatDateForDisplay(l.date)||'', l.type, l.type, '—', '—', '', '', '', '', l.amount||0, '—', '—', l.notes||'']);
-                const header = ['Date','Type','Symbol/Desc','Strategy','Direction','Gross P/L','Charges','Net P/L','Net P/L %','Amount (₹)','Outcome Summary','Emotional State','Notes'];
-                downloadCsv('statement.csv', [header, ...tradeRows, ...ledgerRows]);
-            });
+            // Export Statement CSV functionality removed
         };
         const renderTradeHistory = async () => {
             try {
@@ -5341,27 +5324,89 @@
                 });
                 const topStrategies = Object.entries(byStrategy).sort((a,b)=> b[1]-a[1]).slice(0,3);
 
+                // Calculate new comprehensive metrics
+                const totalNetProfit = wins.reduce((sum, t) => {
+                    const pnl = (t.exit_price - t.entry_price) * (t.quantity || 0) - ((t.brokerage||0)+(t.other_fees||0));
+                    return sum + (pnl > 0 ? pnl : 0);
+                }, 0);
+
+                const totalNetLoss = losses.reduce((sum, t) => {
+                    const pnl = (t.exit_price - t.entry_price) * (t.quantity || 0) - ((t.brokerage||0)+(t.other_fees||0));
+                    return sum + (pnl < 0 ? Math.abs(pnl) : 0);
+                }, 0);
+
+                const totalCharges = closed.reduce((sum, t) => sum + ((t.brokerage||0)+(t.other_fees||0)), 0);
+
+                const totalTradeAmount = closed.reduce((sum, t) => {
+                    const entryAmount = (t.entry_price || 0) * (t.quantity || 0);
+                    const exitAmount = (t.exit_price || 0) * (t.quantity || 0);
+                    return sum + entryAmount + exitAmount;
+                }, 0);
+
+                const stopLossTrades = closed.filter(t => t.stop_loss);
+                const avgStopLoss = stopLossTrades.length > 0 ? 
+                    stopLossTrades.reduce((sum, t) => sum + (t.stop_loss || 0), 0) / stopLossTrades.length : 0;
+
+                const targetTrades = closed.filter(t => t.target_price || t.target);
+                const avgTargetPrice = targetTrades.length > 0 ? 
+                    targetTrades.reduce((sum, t) => sum + (t.target_price || t.target || 0), 0) / targetTrades.length : 0;
+
+                const riskRewardTrades = closed.filter(t => t.stop_loss && (t.target_price || t.target));
+                const avgRiskReward = riskRewardTrades.length > 0 ? 
+                    riskRewardTrades.reduce((sum, t) => {
+                        const entryPrice = t.entry_price || 0;
+                        const stopLoss = t.stop_loss || 0;
+                        const target = t.target_price || t.target || 0;
+                        const risk = Math.abs(entryPrice - stopLoss);
+                        const reward = Math.abs(target - entryPrice);
+                        return sum + (risk > 0 ? reward / risk : 0);
+                    }, 0) / riskRewardTrades.length : 0;
+
                 const metric = (label, value, accent='') => `
                     <div class="flex items-center justify-between p-4 rounded-md" style="background-color: var(--bg-secondary);">
                         <span class="text-sm" style="color: var(--text-secondary);">${label}</span>
                         <span class="font-semibold ${accent}">${value}</span>
                     </div>`;
 
-                container.innerHTML = [
-                    metric('Win Rate', `${winRate.toFixed(1)}%`),
-                    metric('Profit Factor', profitFactor.toFixed(2)),
-                    metric('Closed Trades', closed.length),
-                    metric('Gross Profit', `${formatCurrency(grossProfit)}`, 'text-green-500'),
-                    metric('Gross Loss', `${formatCurrency(-grossLoss)}`, 'text-red-500'),
-                    metric('Best Day', bestDay ? `${bestDay[0]} • ${formatCurrency(bestDay[1])}` : '—', 'text-green-500'),
-                    metric('Worst Day', worstDay ? `${worstDay[0]} • ${formatCurrency(worstDay[1])}` : '—', 'text-red-500'),
-                    `<div class="p-4 rounded-md" style="background-color: var(--bg-secondary);">
-                        <div class="text-sm mb-2" style="color: var(--text-secondary);">Top Strategies</div>
-                        <div class="space-y-2">
-                            ${topStrategies.map(([k,v]) => `<div class="flex justify-between"><span>${k}</span><span class="font-semibold ${v>=0?'text-green-500':'text-red-500'}">${formatCurrency(v)}</span></div>`).join('') || '<span>—</span>'}
+                // Override the parent grid layout
+                container.className = 'space-y-4';
+                container.innerHTML = `
+                        <!-- Row 1: Gross Profit and Gross Loss -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Gross Profit', `${formatCurrency(grossProfit)}`, 'text-green-500')}
+                            ${metric('Gross Loss', `${formatCurrency(-grossLoss)}`, 'text-red-500')}
                         </div>
-                    </div>`
-                ].join('');
+                        
+                        <!-- Row 2: Total Net Profit and Total Net Loss -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Total Net Profit', `${formatCurrency(totalNetProfit)}`, 'text-green-500')}
+                            ${metric('Total Net Loss', `${formatCurrency(totalNetLoss)}`, 'text-red-500')}
+                        </div>
+                        
+                        <!-- Row 3: Avg. Stop Loss and Avg. Target Price -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Avg. Stop Loss', `${formatCurrency(avgStopLoss)}`)}
+                            ${metric('Avg. Target Price', `${formatCurrency(avgTargetPrice)}`)}
+                        </div>
+                        
+                        <!-- Row 4: Total Trade Amount and Total Charges -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Total Trade Amount', `${formatCurrency(totalTradeAmount)}`)}
+                            ${metric('Total Charges', `${formatCurrency(totalCharges)}`, 'text-orange-500')}
+                        </div>
+                        
+                        <!-- Row 5: Best Day and Worst Day -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Best Day', bestDay ? `${bestDay[0]} • ${formatCurrency(bestDay[1])}` : '—', 'text-green-500')}
+                            ${metric('Worst Day', worstDay ? `${worstDay[0]} • ${formatCurrency(worstDay[1])}` : '—', 'text-red-500')}
+                        </div>
+                        
+                        <!-- Row 6: Risk:Reward Ratio and Closed Trades -->
+                        <div class="grid grid-cols-2 gap-4">
+                            ${metric('Risk:Reward Ratio', `${avgRiskReward.toFixed(2)}R`)}
+                            ${metric('Closed Trades', closed.length)}
+                        </div>
+                `;
 
                 // Render Advanced Trading Metrics
                 renderAdvancedMetrics(trades, closed, wins, losses, byDay, byStrategy);
