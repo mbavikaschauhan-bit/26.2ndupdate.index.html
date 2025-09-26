@@ -4651,14 +4651,24 @@
                 console.error('renderFundManagement error', e);
             }
         };
+        // Debouncing for calendar rendering to prevent jitter
+        let calendarRenderTimeout = null;
+        
         const renderCalendar = () => {
-            try {
+            // Clear previous timeout to prevent multiple rapid renders
+            if (calendarRenderTimeout) {
+                clearTimeout(calendarRenderTimeout);
+            }
+            
+            // Debounce rendering by 50ms to prevent jitter
+            calendarRenderTimeout = setTimeout(() => {
+                try {
                     console.log('renderCalendar called - trades count:', appState.trades?.length || 0);
-                const monthYearEl = document.getElementById('calendar-month-year');
-                const daysContainer = document.getElementById('calendar-grid-days');
-                const weeklySummaries = document.getElementById('calendar-grid-summaries');
-                const monthlyPnlDisplay = document.getElementById('monthly-pnl-display');
-                const statsGrid = document.getElementById('calendar-stats-grid');
+                    const monthYearEl = document.getElementById('calendar-month-year');
+                    const daysContainer = document.getElementById('calendar-grid-days');
+                    const weeklySummaries = document.getElementById('calendar-grid-summaries');
+                    const monthlyPnlDisplay = document.getElementById('monthly-pnl-display');
+                    const statsGrid = document.getElementById('calendar-stats-grid');
                     if (!monthYearEl || !daysContainer || !weeklySummaries) {
                         console.log('Calendar elements not found');
                         return;
@@ -4971,9 +4981,10 @@
                 // Replace feather icons for both calendar and KPI metrics
                 feather.replace();
                 
-            } catch (e) {
-                console.error('renderCalendar error', e);
-            }
+                } catch (e) {
+                    console.error('renderCalendar error', e);
+                }
+            }, 50); // 50ms debounce delay
         };
 
 
@@ -5277,11 +5288,25 @@
             }
         };
 
+        // Debouncing for reports rendering to prevent jitter
+        let reportsRenderTimeout = null;
+        
         const renderReports = () => {
-            try {
-                // Render original Performance Metrics
-                const container = document.getElementById('reports-metrics-grid');
-                if (!container) return;
+            // Clear previous timeout to prevent multiple rapid renders
+            if (reportsRenderTimeout) {
+                clearTimeout(reportsRenderTimeout);
+            }
+            
+            // Debounce rendering by 50ms to prevent jitter
+            reportsRenderTimeout = setTimeout(() => {
+                try {
+                    console.log('renderReports called - trades count:', appState.trades?.length || 0);
+                    // Render original Performance Metrics
+                    const container = document.getElementById('reports-metrics-grid');
+                    if (!container) {
+                        console.log('Reports container not found');
+                        return;
+                    }
                 const trades = Array.isArray(appState.trades) ? appState.trades : [];
                 const closed = trades.filter(t => t.exit_price && t.exit_date);
                 const wins = closed.filter(t => ((t.exit_price - t.entry_price) * (t.quantity || 0)) > 0);
@@ -5340,9 +5365,10 @@
 
                 // Render Advanced Trading Metrics
                 renderAdvancedMetrics(trades, closed, wins, losses, byDay, byStrategy);
-            } catch (e) {
-                console.error('renderReports error', e);
-            }
+                } catch (e) {
+                    console.error('renderReports error', e);
+                }
+            }, 50); // 50ms debounce delay
         };
 
         const renderAdvancedMetrics = (trades, closed, wins, losses, byDay, byStrategy) => {
@@ -10177,8 +10203,19 @@
         };
 
         // --- AI ANALYST FUNCTIONALITY ---
+        // Debouncing for AI analyst rendering to prevent jitter
+        let aiAnalystRenderTimeout = null;
+        
         const renderAIAnalyst = async () => {
-            console.debug('AI Analyst: Starting analysis...');
+            // Clear previous timeout to prevent multiple rapid renders
+            if (aiAnalystRenderTimeout) {
+                clearTimeout(aiAnalystRenderTimeout);
+            }
+            
+            // Debounce rendering by 100ms to prevent jitter (longer delay due to async operations)
+            aiAnalystRenderTimeout = setTimeout(async () => {
+                try {
+                    console.debug('AI Analyst: Starting analysis...');
             
             // Show loading state
             const loadingElements = document.querySelectorAll('#ai-analyst .text-2xl');
@@ -10261,7 +10298,7 @@
             displayTraderProfile(traderProfile);
             
             // Generate behavior insights
-            const behaviorInsights = analyzeBehaviorPatterns(trades, metrics);
+            const behaviorInsights = await analyzeBehaviorPatterns(trades, metrics);
             displayBehaviorInsights(behaviorInsights);
             
             // Update performance sections
@@ -10281,6 +10318,10 @@
             updateSummaryHighlight(metrics, traderProfile);
             
             console.debug('AI Analyst: Analysis complete');
+                } catch (e) {
+                    console.error('renderAIAnalyst error', e);
+                }
+            }, 100); // 100ms debounce delay
         };
         
         
@@ -10852,19 +10893,31 @@
         };
         
         // Analyze behavior patterns for psychological insights
+        // Debouncing for behavior pattern analysis to prevent jitter
+        let behaviorAnalysisTimeout = null;
+        
         const analyzeBehaviorPatterns = (trades, metrics) => {
-            const insights = [];
-            
-            try {
-                // Revenge trading detection - large losses followed by increased position sizes
-                const sortedTrades = [...trades].sort((a, b) => {
-                    const dateA = new Date(a.exit_date || a.entry_date);
-                    const dateB = new Date(b.exit_date || b.entry_date);
-                    return dateA - dateB;
-                });
+            return new Promise((resolve) => {
+                // Clear previous timeout to prevent multiple rapid analysis
+                if (behaviorAnalysisTimeout) {
+                    clearTimeout(behaviorAnalysisTimeout);
+                }
                 
-                let revengeTradingCount = 0;
-                for (let i = 1; i < sortedTrades.length; i++) {
+                // Debounce analysis by 50ms to prevent jitter
+                behaviorAnalysisTimeout = setTimeout(() => {
+                    try {
+                        console.log('analyzeBehaviorPatterns called - trades count:', trades?.length || 0);
+                        const insights = [];
+                        
+                        // Revenge trading detection - large losses followed by increased position sizes
+                        const sortedTrades = [...trades].sort((a, b) => {
+                            const dateA = new Date(a.exit_date || a.entry_date);
+                            const dateB = new Date(b.exit_date || b.entry_date);
+                            return dateA - dateB;
+                        });
+                        
+                        let revengeTradingCount = 0;
+                        for (let i = 1; i < sortedTrades.length; i++) {
                     const prevTrade = sortedTrades[i - 1];
                     const currentTrade = sortedTrades[i];
                     
@@ -10884,56 +10937,72 @@
                     } catch (error) {
                         console.warn('AI Analyst: Error analyzing revenge trading pattern', error);
                     }
-                }
-                
-                if (revengeTradingCount > 0) {
-                    insights.push({
-                        type: 'revenge-trading',
-                        title: 'Revenge Trading Pattern',
-                        description: `Detected ${revengeTradingCount} instances of increased position size after losses.`,
-                        recommendation: 'Take breaks after losses and maintain consistent position sizing.'
-                    });
-                }
-                
-                // Confidence trap detection - winning streaks followed by large losses
-                if (metrics.consecutiveWinStreak >= 5 && metrics.maxDrawdown > 5000) {
-                    insights.push({
-                        type: 'confidence-trap',
-                        title: 'Overconfidence Pattern',
-                        description: 'Long winning streaks may be leading to overconfidence and larger losses.',
-                        recommendation: 'Maintain discipline even during winning streaks. Stick to your risk management rules.'
-                    });
-                }
-                
-                // Mood-based insights based on win rate and consistency
-                if (metrics.winRate < 40 && metrics.totalTrades > 10) {
-                    insights.push({
-                        type: 'low-confidence',
-                        title: 'Low Confidence Pattern',
-                        description: 'Low win rate may indicate lack of confidence or poor entry timing.',
-                        recommendation: 'Review your entry criteria and consider paper trading to build confidence.'
-                    });
-                } else if (metrics.winRate > 80 && metrics.avgWin < metrics.avgLoss) {
-                    insights.push({
-                        type: 'small-wins',
-                        title: 'Risk-Averse Pattern',
-                        description: 'High win rate but small average wins suggest you may be cutting profits too early.',
-                        recommendation: 'Let your winners run longer while maintaining your stop losses.'
-                    });
-                }
-                
-            } catch (error) {
-                console.error('AI Analyst: Error analyzing behavior patterns', error);
-            }
-            
-            return insights;
+                        }
+                        
+                        if (revengeTradingCount > 0) {
+                            insights.push({
+                                type: 'revenge-trading',
+                                title: 'Revenge Trading Pattern',
+                                description: `Detected ${revengeTradingCount} instances of increased position size after losses.`,
+                                recommendation: 'Take breaks after losses and maintain consistent position sizing.'
+                            });
+                        }
+                        
+                        // Confidence trap detection - winning streaks followed by large losses
+                        if (metrics.consecutiveWinStreak >= 5 && metrics.maxDrawdown > 5000) {
+                            insights.push({
+                                type: 'confidence-trap',
+                                title: 'Overconfidence Pattern',
+                                description: 'Long winning streaks may be leading to overconfidence and larger losses.',
+                                recommendation: 'Maintain discipline even during winning streaks. Stick to your risk management rules.'
+                            });
+                        }
+                        
+                        // Mood-based insights based on win rate and consistency
+                        if (metrics.winRate < 40 && metrics.totalTrades > 10) {
+                            insights.push({
+                                type: 'low-confidence',
+                                title: 'Low Confidence Pattern',
+                                description: 'Low win rate may indicate lack of confidence or poor entry timing.',
+                                recommendation: 'Review your entry criteria and consider paper trading to build confidence.'
+                            });
+                        } else if (metrics.winRate > 80 && metrics.avgWin < metrics.avgLoss) {
+                            insights.push({
+                                type: 'small-wins',
+                                title: 'Risk-Averse Pattern',
+                                description: 'High win rate but small average wins suggest you may be cutting profits too early.',
+                                recommendation: 'Let your winners run longer while maintaining your stop losses.'
+                            });
+                        }
+                        
+                        resolve(insights);
+                    } catch (error) {
+                        console.error('AI Analyst: Error analyzing behavior patterns', error);
+                        resolve([]); // Return empty array on error
+                    }
+                }, 50); // 50ms debounce delay
+            });
         };
         
         // Display behavior insights in the UI
+        // Debouncing for behavior insights display to prevent jitter
+        let behaviorInsightsTimeout = null;
+        
         const displayBehaviorInsights = (insights) => {
-            try {
-                const behaviorContainer = document.getElementById('ai-behavior-insights');
-                if (!behaviorContainer) return;
+            // Clear previous timeout to prevent multiple rapid renders
+            if (behaviorInsightsTimeout) {
+                clearTimeout(behaviorInsightsTimeout);
+            }
+            
+            // Debounce display by 50ms to prevent jitter
+            behaviorInsightsTimeout = setTimeout(() => {
+                try {
+                    console.log('displayBehaviorInsights called with insights count:', insights?.length || 0);
+                    const behaviorContainer = document.getElementById('ai-behavior-insights');
+                    if (!behaviorContainer) {
+                        console.log('Behavior container not found');
+                        return;
+                    }
                 
                 if (insights.length === 0) {
                     behaviorContainer.innerHTML = `
@@ -10955,9 +11024,10 @@
                 
                 // Replace feather icons
                 setTimeout(() => feather.replace(), 100);
-            } catch (error) {
-                console.error('AI Analyst: Error displaying behavior insights', error);
-            }
+                } catch (error) {
+                    console.error('AI Analyst: Error displaying behavior insights', error);
+                }
+            }, 50); // 50ms debounce delay
         };
         
         // Update performance sections (Top Winners/Losers)
