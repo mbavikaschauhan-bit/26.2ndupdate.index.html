@@ -27,14 +27,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Prevent flash of content - must be first */
-        #auth-container, #app-container {
-            display: none !important;
-        }
+            /* Prevent flash of content - must be first */
+            #auth-container, #app-container {
+                display: none !important;
+            }
 
-        #auth-container.show, #app-container.show {
-            display: flex !important;
-        }
+            #auth-container.show, #app-container.show {
+                display: flex !important;
+            }
 
         :root {
             /* Light Theme (Default) */
@@ -994,7 +994,7 @@
     <div id="toast-container"></div>
 
     <!-- NEW: Auth Container -->
-    <div id="auth-container" class="min-h-screen flex items-center justify-center">
+        <div id="auth-container" class="min-h-screen flex items-center justify-center">
         <div class="w-full max-w-sm p-8 space-y-6 rounded-lg shadow-lg" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
             <form id="auth-form">
                 <div class="text-center mb-6">
@@ -1030,7 +1030,7 @@
 
 
     <!-- Main App Wrapper -->
-    <div id="app-container" class="relative h-screen md:flex">
+        <div id="app-container" class="relative h-screen md:flex">
         <!-- Sidebar -->
         <aside id="sidebar" class="w-64 flex-shrink-0 flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex" style="background-color: var(--bg-primary); border-right: 1px solid var(--border-color);">
             <div class="h-16 flex items-center justify-center px-4" style="border-bottom: 1px solid var(--border-color);">
@@ -3610,8 +3610,8 @@
             console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
             if (user) {
                 appState.user = user;
-                authContainer.classList.remove('show');
-                appContainer.classList.add('show');
+                    authContainer.classList.remove('show');
+                    appContainer.classList.add('show');
                 document.getElementById('user-display-name').textContent = user.displayName || 'Guest';
                 console.log('User logged in - showing app container');
                 
@@ -3628,14 +3628,14 @@
 
                 setupSupabaseListeners();
                 
-                // Restore saved page or default to dashboard
-                const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-                navigateTo(savedPage);
+                    // Restore saved page or default to dashboard
+                    const savedPage = localStorage.getItem('currentPage') || 'dashboard';
+                    navigateTo(savedPage);
                 applyTheme();
             } else {
                 appState.user = null;
-                appContainer.classList.remove('show');
-                authContainer.classList.add('show');
+                    appContainer.classList.remove('show');
+                    authContainer.classList.add('show');
                 console.log('User logged out - showing auth container');
                 if (appState.clockIntervalId) clearInterval(appState.clockIntervalId);
                 appState.clockIntervalId = null;
@@ -3692,40 +3692,40 @@
         
         // --- DATA LISTENERS (Supabase Realtime) ---
         const setupSupabaseListeners = () => {
-            console.log('setupSupabaseListeners called - user:', appState.user?.id);
-            if (!appState.user) {
-                console.log('No user found, skipping listener setup');
-                return;
-            }
+                console.log('setupSupabaseListeners called - user:', appState.user?.id);
+                if (!appState.user) {
+                    console.log('No user found, skipping listener setup');
+                    return;
+                }
             const userId = appState.user.id;
-            console.log('Setting up Supabase listeners for user:', userId);
+                console.log('Setting up Supabase listeners for user:', userId);
             
             const tradesQuery = query(collection(`trades`), where('user_id', '==', userId), orderBy("entry_date", "desc"));
             appState.unsubscribeTrades = db.onSnapshot(tradesQuery, (snapshot) => {
-                console.log('Supabase trades listener fired - snapshot docs:', snapshot.docs.length);
+                    console.log('Supabase trades listener fired - snapshot docs:', snapshot.docs.length);
                 appState.trades = snapshot.docs.map(doc => doc.data());
-                console.log('Updated appState.trades with count:', appState.trades.length);
+                    console.log('Updated appState.trades with count:', appState.trades.length);
                 updateTradeDependentUI();
-                
-                // Force re-render of current page if it's data-dependent
-                const currentPage = document.querySelector('.page.active');
-                if (currentPage && ['trade-calendar', 'reports', 'trade-statement'].includes(currentPage.id)) {
-                    console.log('Current page is data-dependent, forcing re-render:', currentPage.id);
-                    setTimeout(() => {
-                        if (currentPage.id === 'trade-calendar') {
-                            console.log('Re-rendering calendar with Supabase data');
-                            renderCalendar();
-                        }
-                        if (currentPage.id === 'reports') {
-                            console.log('Re-rendering reports with Supabase data');
-                            renderReports();
-                        }
-                        if (currentPage.id === 'trade-statement') {
-                            console.log('Re-rendering statement with Supabase data');
-                            renderStatement();
-                        }
-                    }, 100);
-                }
+                    
+                    // Force re-render of current page if it's data-dependent
+                    const currentPage = document.querySelector('.page.active');
+                    if (currentPage && ['trade-calendar', 'reports', 'trade-statement'].includes(currentPage.id)) {
+                        console.log('Current page is data-dependent, forcing re-render:', currentPage.id);
+                        setTimeout(() => {
+                            if (currentPage.id === 'trade-calendar') {
+                                console.log('Re-rendering calendar with Supabase data');
+                                renderCalendar();
+                            }
+                            if (currentPage.id === 'reports') {
+                                console.log('Re-rendering reports with Supabase data');
+                                renderReports();
+                            }
+                            if (currentPage.id === 'trade-statement') {
+                                console.log('Re-rendering statement with Supabase data');
+                                renderStatement();
+                            }
+                        }, 10);
+                    }
             }, (error) => {
                 console.error("Error fetching trades:", error);
                 showToast("Could not fetch trades.", "error");
@@ -3733,22 +3733,22 @@
 
             const ledgerQuery = query(collection(`ledger`), where('user_id', '==', userId), orderBy("date", "desc"));
             appState.unsubscribeLedger = db.onSnapshot(ledgerQuery, (snapshot) => {
-                console.log('Supabase ledger listener fired - snapshot docs:', snapshot.docs.length);
+                    console.log('Supabase ledger listener fired - snapshot docs:', snapshot.docs.length);
                 appState.ledger = snapshot.docs.map(doc => doc.data());
-                console.log('Updated appState.ledger with count:', appState.ledger.length);
-                updateLedgerDependentUI();
-                
-                // Force re-render of current page if it's ledger-dependent
-                const currentPage = document.querySelector('.page.active');
-                if (currentPage && ['trade-statement'].includes(currentPage.id)) {
-                    console.log('Current page is ledger-dependent, forcing re-render:', currentPage.id);
-                    setTimeout(() => {
-                        if (currentPage.id === 'trade-statement') {
-                            console.log('Re-rendering statement with Supabase ledger data');
-                            renderStatement();
-                        }
-                    }, 100);
-                }
+                    console.log('Updated appState.ledger with count:', appState.ledger.length);
+                 updateLedgerDependentUI();
+                    
+                    // Force re-render of current page if it's ledger-dependent
+                    const currentPage = document.querySelector('.page.active');
+                    if (currentPage && ['trade-statement'].includes(currentPage.id)) {
+                        console.log('Current page is ledger-dependent, forcing re-render:', currentPage.id);
+                        setTimeout(() => {
+                            if (currentPage.id === 'trade-statement') {
+                                console.log('Re-rendering statement with Supabase ledger data');
+                                renderStatement();
+                            }
+                        }, 10);
+                    }
             }, (error) => {
                 console.error("Error fetching ledger:", error);
                 showToast("Could not fetch fund data.", "error");
@@ -3784,6 +3784,8 @@
         
         const updateTradeDependentUI = () => {
             console.log('updateTradeDependentUI called - trades count:', appState.trades?.length || 0);
+            
+            // Render all pages first (without changing sidebar state)
             renderDashboard();
             renderTradeHistory();
             renderCalendar();
@@ -3798,7 +3800,7 @@
                 renderAIAnalyst();
             }
             
-            // Ensure current page re-renders when data loads
+            // Ensure current page re-renders when data loads (renders last to prevent sidebar flicker)
             const currentPage = document.querySelector('.page.active');
             if (currentPage) {
                 const pageId = currentPage.id;
@@ -3821,7 +3823,7 @@
                         renderAIAnalyst();
                         break;
                     case 'challenge':
-                        renderChallenge();
+            renderChallenge();
                         break;
                     case 'trade-statement':
                         renderStatement();
@@ -3862,12 +3864,12 @@
                 appState.user = null;
                 
                 // Force hide app container
-                appContainer.classList.remove('show');
-                console.log('App container hidden');
+                    appContainer.classList.remove('show');
+                    console.log('App container hidden');
                 
                 // Force show auth container
-                authContainer.classList.add('show');
-                console.log('Auth container shown');
+                    authContainer.classList.add('show');
+                    console.log('Auth container shown');
                 
                 // Clear intervals
                 if (appState.clockIntervalId) clearInterval(appState.clockIntervalId);
@@ -3899,8 +3901,8 @@
                 activeNavItem.classList.add('active');
                 pageTitle.textContent = activeNavItem.querySelector('span').textContent.trim();
             }
-            // Store current page in localStorage for persistence
-            localStorage.setItem('currentPage', pageId);
+                // Store current page in localStorage for persistence
+                localStorage.setItem('currentPage', pageId);
             if (pageId === 'add-trade') {
                 clearTradeForm();
                 // Set Trade tab as default when navigating to add trade page
@@ -3946,16 +3948,16 @@
                 }, 100);
             }
             if (pageId === 'trade-calendar') {
-                console.log('Navigating to trade-calendar - current trades count:', appState.trades?.length || 0);
-                // Check if we have data, if not, wait for it
-                if (appState.trades && appState.trades.length > 0) {
-                    console.log('Data available, rendering calendar immediately');
-                    renderCalendar();
-                } else {
-                    console.log('No data available, starting polling for data...');
-                    // Wait for data to load, then render (with timeout to prevent infinite waiting)
+                    console.log('Navigating to trade-calendar - current trades count:', appState.trades?.length || 0);
+                    // Check if we have data, if not, wait for it
+                    if (appState.trades && appState.trades.length > 0) {
+                        console.log('Data available, rendering calendar immediately');
+                        renderCalendar();
+                    } else {
+                        console.log('No data available, starting polling for data...');
+                    // Wait for data to load, then render (optimized polling)
                     let attempts = 0;
-                    const maxAttempts = 50; // 5 seconds max wait
+                    const maxAttempts = 20; // 2 seconds max wait
                     const checkData = () => {
                         console.log(`Data check attempt ${attempts + 1}/${maxAttempts} - trades count:`, appState.trades?.length || 0);
                         if (appState.trades && appState.trades.length > 0) {
@@ -3963,7 +3965,7 @@
                             renderCalendar();
                         } else if (attempts < maxAttempts) {
                             attempts++;
-                            setTimeout(checkData, 100);
+                            setTimeout(checkData, 50); // Reduced from 100ms to 50ms
                         } else {
                             console.log('Timeout reached, rendering calendar anyway');
                             // Render anyway after timeout (will show empty state)
@@ -3971,18 +3973,18 @@
                         }
                     };
                     checkData();
-                }
+                    }
             }
             if (pageId === 'challenge') {
-                // Check if we have data, if not, wait for it
-                if (appState.trades && appState.trades.length > 0) {
-                    renderChallenge();
-                    renderChallengeHistory();
-                    renderAchievements();
-                } else {
-                    // Wait for data to load, then render (with timeout to prevent infinite waiting)
+                    // Check if we have data, if not, wait for it
+                    if (appState.trades && appState.trades.length > 0) {
+                        renderChallenge();
+                        renderChallengeHistory();
+                        renderAchievements();
+                    } else {
+                    // Wait for data to load, then render (optimized polling)
                     let attempts = 0;
-                    const maxAttempts = 50; // 5 seconds max wait
+                    const maxAttempts = 20; // 2 seconds max wait
                     const checkData = () => {
                         if (appState.trades && appState.trades.length > 0) {
                             renderChallenge();
@@ -3990,7 +3992,7 @@
                             renderAchievements();
                         } else if (attempts < maxAttempts) {
                             attempts++;
-                            setTimeout(checkData, 100);
+                            setTimeout(checkData, 50); // Reduced from 100ms to 50ms
                         } else {
                             // Render anyway after timeout (will show empty state)
                             renderChallenge();
@@ -3999,29 +4001,29 @@
                         }
                     };
                     checkData();
-                }
+                    }
             }
             if (pageId === 'ai-analyst') {
-                // Check if we have data, if not, wait for it
-                if (appState.trades && appState.trades.length > 0) {
-                    renderAIAnalyst();
-                } else {
-                    // Wait for data to load, then render (with timeout to prevent infinite waiting)
+                    // Check if we have data, if not, wait for it
+                    if (appState.trades && appState.trades.length > 0) {
+                        renderAIAnalyst();
+                    } else {
+                    // Wait for data to load, then render (optimized polling)
                     let attempts = 0;
-                    const maxAttempts = 50; // 5 seconds max wait
+                    const maxAttempts = 20; // 2 seconds max wait
                     const checkData = () => {
                         if (appState.trades && appState.trades.length > 0) {
                             renderAIAnalyst();
                         } else if (attempts < maxAttempts) {
                             attempts++;
-                            setTimeout(checkData, 100);
+                            setTimeout(checkData, 50); // Reduced from 100ms to 50ms
                         } else {
                             // Render anyway after timeout (will show empty state)
                             renderAIAnalyst();
                         }
                     };
                     checkData();
-                }
+                    }
             }
         };
         navItems.forEach(item => {
@@ -4651,16 +4653,16 @@
         };
         const renderCalendar = () => {
             try {
-                console.log('renderCalendar called - trades count:', appState.trades?.length || 0);
+                    console.log('renderCalendar called - trades count:', appState.trades?.length || 0);
                 const monthYearEl = document.getElementById('calendar-month-year');
                 const daysContainer = document.getElementById('calendar-grid-days');
                 const weeklySummaries = document.getElementById('calendar-grid-summaries');
                 const monthlyPnlDisplay = document.getElementById('monthly-pnl-display');
                 const statsGrid = document.getElementById('calendar-stats-grid');
-                if (!monthYearEl || !daysContainer || !weeklySummaries) {
-                    console.log('Calendar elements not found');
-                    return;
-                }
+                    if (!monthYearEl || !daysContainer || !weeklySummaries) {
+                        console.log('Calendar elements not found');
+                        return;
+                    }
 
                 const baseDate = appState.calendarDate instanceof Date ? new Date(appState.calendarDate) : new Date();
                 const year = baseDate.getFullYear();
@@ -5705,16 +5707,16 @@
         };
         const renderStatement = (filters = {}) => {
             try {
-                console.log('renderStatement called - trades count:', appState.trades?.length || 0, 'ledger count:', appState.ledger?.length || 0);
+                    console.log('renderStatement called - trades count:', appState.trades?.length || 0, 'ledger count:', appState.ledger?.length || 0);
                 const statementBody = document.getElementById('statement-tbody');
-                if (!statementBody) {
-                    console.log('Statement body not found');
-                    return;
-                }
+                    if (!statementBody) {
+                        console.log('Statement body not found');
+                        return;
+                    }
                 // Load latest
                 const trades = Array.isArray(appState.trades) ? appState.trades : [];
                 const ledger = Array.isArray(appState.ledger) ? appState.ledger : [];
-                console.log('Statement rendering with trades:', trades.length, 'ledger:', ledger.length);
+                    console.log('Statement rendering with trades:', trades.length, 'ledger:', ledger.length);
 
                 const tradeRows = trades.map(t => {
                     const closed = t.exit_date && t.exit_price;
@@ -9214,15 +9216,15 @@
         setupTradeTableEventListeners();
         
 
-        // Wait for Chart.js to load, then render charts
+        // Wait for Chart.js to load, then render charts (reduced delay)
         setTimeout(() => {
             if (typeof Chart !== 'undefined') {
                 renderAllCharts();
             } else {
                 console.warn('Chart.js not loaded, retrying...');
-                setTimeout(() => renderAllCharts(), 1000);
+                setTimeout(() => renderAllCharts(), 200);
             }
-        }, 500);
+        }, 100);
 
         // --- DEMO DATA CONTROLS ---
         const seedBtn = document.getElementById('seed-demo-data');
@@ -11775,7 +11777,7 @@
             // Apply initial filter to ensure dashboard shows filtered data from start
             setTimeout(() => {
                 refreshDashboardData();
-            }, 500);
+            }, 100);
             
             // Clear cache when trades data changes (for real-time updates)
             const originalUpdateTradeDependentUI = window.updateTradeDependentUI;
