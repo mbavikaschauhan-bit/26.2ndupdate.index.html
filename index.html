@@ -5705,10 +5705,20 @@
                 console.error('renderAdvancedMetrics error', e);
             }
         };
+        // Debouncing for statement rendering to prevent jitter
+        let statementRenderTimeout = null;
+        
         const renderStatement = (filters = {}) => {
-            try {
+            // Clear previous timeout to prevent multiple rapid renders
+            if (statementRenderTimeout) {
+                clearTimeout(statementRenderTimeout);
+            }
+            
+            // Debounce rendering by 50ms to prevent jitter
+            statementRenderTimeout = setTimeout(() => {
+                try {
                     console.log('renderStatement called - trades count:', appState.trades?.length || 0, 'ledger count:', appState.ledger?.length || 0);
-                const statementBody = document.getElementById('statement-tbody');
+                    const statementBody = document.getElementById('statement-tbody');
                     if (!statementBody) {
                         console.log('Statement body not found');
                         return;
@@ -5943,9 +5953,10 @@
                         <td class="px-3 py-2" style="border-color: var(--border-color);">${r.notes}</td>
                     </tr>
                 `).join('');
-            } catch (e) {
-                console.error('renderStatement error', e);
-            }
+                } catch (e) {
+                    console.error('renderStatement error', e);
+                }
+            }, 50); // 50ms debounce delay
         };
         const renderProfilePage = (profileData) => {
             try {
